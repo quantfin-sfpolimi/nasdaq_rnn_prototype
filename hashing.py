@@ -4,6 +4,7 @@ from hashlib import sha256
 def hashTrainTest(X_train, X_test, hashed_train_data=None):
 
   # Train test hashing
+  
   hashed_train_data = []
   for x in X_train:
     x = str(x)
