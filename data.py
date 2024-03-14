@@ -24,4 +24,16 @@ end_date = datetime.datetime.now()
 for ticker in tickers:
   stock_prices = si.get_data(ticker, start_date = start_date, end_date = end_date)
   stocks_prices[ticker] = stock_prices['adjclose']
+
+# check NaN values
+for ticker in tickers:
+  nan_values = stocks_prices[ticker].isnull().values.any()
+  
+  if nan_values == True:
+    # count NaN values
+    count_nan = stocks_prices[ticker].isnull().sum()
+    
+    # remove NaN values
+    if count_nan > (len(stocks_prices)*0.1):
+      stocks_prices.drop(ticker, axis=1, inplace=True)
   
