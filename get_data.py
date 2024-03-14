@@ -24,3 +24,4 @@ end_date = datetime.datetime.now()
 for ticker in tickers:
   stock_prices = si.get_data(ticker, start_date = start_date, end_date = end_date)
   stocks_prices[ticker] = stock_prices['adjclose']
+  
