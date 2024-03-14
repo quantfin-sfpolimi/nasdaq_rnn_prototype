@@ -28,12 +28,14 @@ for ticker in tickers:
 # check NaN values
 for ticker in tickers:
   nan_values = stocks_prices[ticker].isnull().values.any()
-  
   if nan_values == True:
     # count NaN values
     count_nan = stocks_prices[ticker].isnull().sum()
-    
+    print(f"{ticker} NaN values: {nan_values}, count: {count_nan}/{len(stocks_prices)}")
     # remove NaN values
     if count_nan > (len(stocks_prices)*0.1):
       stocks_prices.drop(ticker, axis=1, inplace=True)
+
+# clean remaining NaN
+stocks_prices.dropna(inplace = True)
   
