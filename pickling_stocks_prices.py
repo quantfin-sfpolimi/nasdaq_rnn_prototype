@@ -4,9 +4,9 @@ import datetime
 import pickle
 
 #make function to get list of tickers
-def get_list_tickers(link):
+def get_nasdaq_tickers():
   # get NASDAQ ticker
-  tables = pd.read_html(link)
+  tables = pd.read_html('https://en.wikipedia.org/wiki/Nasdaq-100')
   df = tables[4]
   # clean df
   df.drop(['Company','GICS Sector', 'GICS Sub-Industry'], axis=1, inplace=True)
@@ -50,7 +50,7 @@ def clean_df(percentage, tickers, stocks_prices):
 
 
 #example of usage
-tickers = get_list_tickers('https://en.wikipedia.org/wiki/Nasdaq-100')
+tickers = get_nasdaq_tickers()
 stocks_prices = loaded_df(5, tickers=tickers)
 stocks_prices = clean_df(0.1, tickers=tickers, stocks_prices=stocks_prices)
 # saving stocks_prices in a pickle file
