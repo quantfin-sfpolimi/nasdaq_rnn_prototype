@@ -1,4 +1,5 @@
 #import libraries
+import pandas as pd
 from helpers import xtrain_ytrain, visualizing, get_nasdaq_tickers, loaded_df, clean_df
 
 #load data, clean data frame (closing stock prices)
@@ -13,6 +14,10 @@ stocks_prices = clean_df(10, tickers, stocks_prices)
 
 # clean remaining NaN
 stocks_prices.dropna(inplace = True)
+
+# get one stock, only for prototype purpose (ADBE)
+stock_prices = pd.DataFrame()
+stock_prices['ADBE'] = stocks_prices['ADBE']
 
 #hash data, split in sets
 
