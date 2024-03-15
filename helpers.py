@@ -3,6 +3,7 @@ import datetime as dt
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
+import yahoo_fin.stock_info as si
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense
@@ -10,10 +11,47 @@ from keras.layers import LSTM
 from keras.layers import Dropout
 from zlib import crc32
 
-###pickling, hashing, getting data online 
+###pickling, hashing, getting data online
+def get_nasdaq_tickers():
+  # get NASDAQ ticker
+  tables = pd.read_html('https://en.wikipedia.org/wiki/Nasdaq-100')
+  df = tables[4]
+  # clean df
+  df.drop(['Company','GICS Sector', 'GICS Sub-Industry'], axis=1, inplace=True)
+  # put data in a list
+  tickers = df['Ticker'].values.tolist()
+  return tickers
+
+def loaded_df(years, tickers):
+  stocks_dict = {}
+  # set the period
+  time_window = 365*years
+  start_date = dt.datetime.now() - dt.timedelta(time_window)
+  end_date = dt.datetime.now()
+
+  # get data and load into a dataframe
+  for i, ticker in enumerate(tickers):
+    print('Getting {} ({}/{})'.format(ticker, i, len(tickers)))
+    prices = si.get_data(ticker, start_date = start_date, end_date = end_date)
+    stocks_dict[ticker] = prices['adjclose']
+  
+  stocks_prices = pd.DataFrame.from_dict(stocks_dict)
+  return stocks_prices
 
 
 ###data cleaning
+def clean_df(percentage, tickers, stocks_prices):
+  if percentage > 1: 
+    percentage = percentage/100
+  # check NaN values
+  for ticker in tickers:
+    nan_values = stocks_prices[ticker].isnull().values.any()
+    if nan_values == True:
+      # count NaN values
+      count_nan = stocks_prices[ticker].isnull().sum()
+      # remove NaN values
+      if count_nan > (len(stocks_prices)*percentage):
+        stocks_prices.drop(ticker, axis=1, inplace=True)
 
 
 ### rnn model
