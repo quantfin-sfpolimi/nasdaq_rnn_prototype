@@ -25,13 +25,14 @@ def xtrain_ytrain(adj_close_df):
     train_set, test_set = hashing_and_splitting(adj_close_df)
     sc = MinMaxScaler(feature_range = (0, 1))
     training_set_scaled = sc.fit_transform(train_set)
-    X_train = []
-    y_train = []
+    xtrain = []
+    ytrain = []
     for i in range(60, len(adj_close_df)):
-        X_train.append(training_set_scaled[i-60:i, 0])
-        y_train.append(training_set_scaled[i, 0]) 
-    X_train, y_train = np.array(X_train), np.array(y_train)
-    X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
+        xtrain.append(training_set_scaled[i-60:i, 0])
+        ytrain.append(training_set_scaled[i, 0]) 
+    xtrain, ytrain = np.array(xtrain), np.array(ytrain)
+    xtrain = np.reshape(xtrain, (xtrain.shape[0], xtrain.shape[1], 1))
+    return xtrain, ytrain, test_set
 
 def lstm_model(xtrain, ytrain):
     model = Sequential()
@@ -57,7 +58,7 @@ def predictions(xtrain, ytrain, xtest):
     return predicted_stock_price, real_stock_price
 
 def visualizing(xtrain, ytrain, xtest):
-    predicted_price, real_price = predicted_price(xtrain, ytrain, xtest)
+    predicted_price, real_price = predictions(xtrain, ytrain, xtest)
     #Visualizing the prediction
     plt.figure()
     plt.plot(real_price, color = 'r', label = 'Close')
