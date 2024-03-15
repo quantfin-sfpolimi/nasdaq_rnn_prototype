@@ -1,3 +1,2 @@
-nasdaq_rnn\lstm.py
-
-streamlit_presentation.py
+nasdaq_rnn/lstm
+nasdaq_rnn/streamlit_presentation.
