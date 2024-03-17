@@ -1,16 +1,10 @@
 #import libraries
-import pandas as pd
-from helpers import xtrain_ytrain, visualizing, load_dataframe, clean_df, lstm_model
+from helpers import xtrain_ytrain, visualizing
 
 #load data, clean data frame (closing stock prices)
-stocks_prices, tickers = load_dataframe()
-clean_df(10, tickers=tickers, stocks_prices=stocks_prices)
-# clean remaining NaN
-stocks_prices.dropna(inplace = True)
-# get one stock, only for prototype purpose (ADBE)
-stock_prices = pd.DataFrame()
-stock_prices['GOOG'] = stocks_prices['GOOG']
-print(stock_prices)
+
+
+
 #hash data, split in sets
 
 #lstm model
