@@ -124,6 +124,7 @@ def xtrain_ytrain(adj_close_df):
     xtest, ytest = np.array(xtest), np.array(ytest)
     return xtrain, ytrain, xtest, ytest, sc
 
+
 def lstm_model(xtrain, ytrain):
     model = Sequential() 
     model.add(LSTM(units = 50, activation = 'relu', return_sequences = True, input_shape = (xtrain.shape[1], 1)))
