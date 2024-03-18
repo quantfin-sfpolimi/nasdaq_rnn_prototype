@@ -3,18 +3,95 @@ import datetime as dt
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-import yahoo_fin.stock_info as si
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Dropout
 from zlib import crc32
+import os
+import pickle
+import yahoo_fin.stock_info as si
 
-###pickling, hashing, getting data online 
+
+###pickling, both dumping and loading
+def pickle_dump(stocks_prices):
+    with open("stocks_prices_dataframe.pkl", "wb") as f:
+        pickle.dump(stocks_prices, f)
+
+def pickle_load(filename):
+    with open(filename, "rb") as f:
+        stocks_prices = pickle.load(f)
+    return stocks_prices
+
+#load data, online or from pickle
+def load_dataframe():
+    #check if pickle file exists
+    if(os.path.isfile("stocks_prices_dataframe.pkl")):
+        stock_prices = pickle_load("stocks_prices_dataframe.pkl")
+        tickers = stock_prices.columns.tolist()
+    #if pickle doesn't exist, then pick data online
+    else:
+        tickers = get_nasdaq_tickers()
+        stock_prices = loaded_df(years=10, tickers=tickers)
+
+    return stock_prices, tickers
+
+###hashing
+def hashing_and_splitting(adj_close_df):
+    # calculate checksum for every index
+    checksum = np.array([crc32(v) for v in adj_close_df.index.values])
+    # fraction of data to use for testing only
+    test_ratio = 0.2
+    # pick 20% of indices for testing
+    test_indices = checksum < test_ratio * 2**32
+
+    return adj_close_df[~test_indices], adj_close_df[test_indices]
+
+
+###getting data online 
+def get_nasdaq_tickers():
+  # get NASDAQ ticker
+  tables = pd.read_html('https://en.wikipedia.org/wiki/Nasdaq-100')
+  df = tables[4]
+  # clean df
+  df.drop(['Company','GICS Sector', 'GICS Sub-Industry'], axis=1, inplace=True)
+  # put data in a list
+  tickers = df['Ticker'].values.tolist()
+  return tickers
+
+def loaded_df(years, tickers):
+  stocks_dict = {}
+  # set the period
+  time_window = 365*years
+  start_date = dt.datetime.now() - dt.timedelta(time_window)
+  end_date = dt.datetime.now()
+
+  # get data and load into a dataframe
+  for i, ticker in enumerate(tickers):
+    print('Getting {} ({}/{})'.format(ticker, i, len(tickers)))
+    prices = si.get_data(ticker, start_date = start_date, end_date = end_date)
+    stocks_dict[ticker] = prices['adjclose']
+  
+  stocks_prices = pd.DataFrame.from_dict(stocks_dict)
+  pickle_dump(stocks_prices=stocks_prices)
+  return stocks_prices
 
 
 ###data cleaning
+def clean_df(percentage, tickers, stocks_prices):
+  if percentage > 1: 
+    percentage = percentage/100
+  # check NaN values
+  for ticker in tickers:
+    nan_values = stocks_prices[ticker].isnull().values.any()
+    if nan_values == True:
+      # count NaN values
+      count_nan = stocks_prices[ticker].isnull().sum()
+      # remove NaN values
+      if count_nan > (len(stocks_prices)*percentage):
+        stocks_prices.drop(ticker, axis=1, inplace=True)
+    return stocks_prices
 
 
 ### rnn model
