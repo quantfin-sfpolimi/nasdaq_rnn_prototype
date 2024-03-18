@@ -11,7 +11,7 @@ from keras.layers import Dropout
 from zlib import crc32
 import os
 import pickle
-import yahoo_fin.stock_info as si
+import yfinance as yf
 
 
 ###pickling, both dumping and loading
@@ -25,7 +25,7 @@ def pickle_load(filename):
     return stocks_prices
 
 #load data, online or from pickle
-def load_dataframe():
+def load_dataframe(years):
     #check if pickle file exists
     if(os.path.isfile("stocks_prices_dataframe.pkl")):
         stock_prices = pickle_load("stocks_prices_dataframe.pkl")
@@ -33,7 +33,7 @@ def load_dataframe():
     #if pickle doesn't exist, then pick data online
     else:
         tickers = get_nasdaq_tickers()
-        stock_prices = loaded_df(years=10, tickers=tickers)
+        stock_prices = loaded_df(years=years, tickers=tickers)
 
     return stock_prices, tickers
 
@@ -70,8 +70,8 @@ def loaded_df(years, tickers):
   # get data and load into a dataframe
   for i, ticker in enumerate(tickers):
     print('Getting {} ({}/{})'.format(ticker, i, len(tickers)))
-    prices = si.get_data(ticker, start_date = start_date, end_date = end_date)
-    stocks_dict[ticker] = prices['adjclose']
+    prices = yf.download(ticker, start = start_date, end = end_date)
+    stocks_dict[ticker] = prices['Adj Close']
   
   stocks_prices = pd.DataFrame.from_dict(stocks_dict)
   pickle_dump(stocks_prices=stocks_prices)
@@ -80,18 +80,19 @@ def loaded_df(years, tickers):
 
 ###data cleaning
 def clean_df(percentage, tickers, stocks_prices):
-  if percentage > 1: 
-    percentage = percentage/100
-  # check NaN values
-  for ticker in tickers:
-    nan_values = stocks_prices[ticker].isnull().values.any()
-    if nan_values == True:
-      # count NaN values
-      count_nan = stocks_prices[ticker].isnull().sum()
-      # remove NaN values
-      if count_nan > (len(stocks_prices)*percentage):
-        stocks_prices.drop(ticker, axis=1, inplace=True)
+    if percentage > 1: 
+        percentage = percentage/100
+    # check NaN values
+    for ticker in tickers:
+        nan_values = stocks_prices[ticker].isnull().values.any()
+        if nan_values == True:
+            # count NaN values
+            count_nan = stocks_prices[ticker].isnull().sum()
+            # remove NaN values
+            if count_nan > (len(stocks_prices)*percentage):
+                stocks_prices.drop(ticker, axis=1, inplace=True)
     return stocks_prices
+
 
 
 ### rnn model
@@ -114,8 +115,6 @@ def xtrain_ytrain(adj_close_df):
     xtrain, ytrain = np.array(xtrain), np.array(ytrain)
     xtrain = np.reshape(xtrain, (xtrain.shape[0], xtrain.shape[1], 1))
     
-    past_100_days = train_set.tail(100) #testing on the last 100 days of the train dataset
-    test_set = pd.concat([past_100_days, train_set], ignore_index=True)
     xtest = []
     ytest = []
     for i in range(20, test_set_scaled.shape[0]):
@@ -137,18 +136,18 @@ def lstm_model(xtrain, ytrain):
     model.add(Dropout(0.5))
     model.add(Dense(units = 1))
     model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(xtrain, ytrain, epochs = 20, batch_size=32, verbose=1)
+    model.fit(xtrain, ytrain, epochs = 100, batch_size=32, verbose=1)
     return model
 
 def predictions(model, xtest, ytest, sc):
     #Making predictions on the test data
     predicted_stock_sc = model.predict(xtest)
     #predicted_stock_real = sc.inverse_transform(predicted_stock_sc)
-    #rescale the predicted and original labels
-    scale = 1/sc.scale_  # converts it back to normal price
-    predicted_stock_sc = predicted_stock_sc * scale
-    ytest = ytest * scale
-    return predicted_stock_sc, ytest
+    predicted_stock_sc= predicted_stock_sc.reshape(-1, 1)
+    predicted_stock = sc.inverse_transform(predicted_stock_sc)
+    ytest = ytest.reshape(-1, 1)
+    ytest = sc.inverse_transform(ytest)
+    return predicted_stock, ytest
 
 ###plotting 
 def visualizing(model, xtest, ytest, sc):
