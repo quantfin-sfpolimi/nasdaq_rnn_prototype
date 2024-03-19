@@ -126,7 +126,7 @@ st.caption('Output of a LSTM network, with loss of 0,1%, 100 epochs, and circa 3
 st.write('We also kept track of our observations about the output of the project. Looking closely, the predictions are not much different than a moving average, but that is due to it\'s simplicity, and such lack of accuracy had been foretold by us. In the official project, we aim to show much more reliable results.')
 
 st.image('images/prototype presentation/loss.png')
-st.write('We also analysed how we our network minimized the loss function over each run!')
+st.write('We also analysed how our network minimized the loss function over each run!')
 
 st.divider()
 st.title('What are we doing next?')
