@@ -8,11 +8,13 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Dropout
+from keras.callbacks import History
 from zlib import crc32
 import os
 import pickle
 import yfinance as yf
 
+history = History()
 
 ###pickling, both dumping and loading
 def pickle_dump(stocks_prices):
@@ -135,9 +137,10 @@ def lstm_model(xtrain, ytrain):
     model.add(LSTM(units=120, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(units = 1))
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(xtrain, ytrain, epochs = 100, batch_size=32, verbose=1)
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])  # Add metrics=['accuracy'] to monitor accuracy
+    model.fit(xtrain, ytrain, epochs=100, batch_size=32, verbose=1)
     return model
+
 
 def predictions(model, xtest, ytest, sc):
     #Making predictions on the test data
@@ -158,4 +161,22 @@ def visualizing(model, xtest, ytest, sc):
     plt.plot( predicted_stock, color = 'b', label = 'Prediction')
     plt.xlabel('Date')
     plt.legend()
+    plt.show()
+    
+def model_data(model):
+    #part of code pertaining plotting loss and accuracy of the model
+    print(history.history.keys())
+    train_loss = history.history['loss']
+    xc = range(1, 101)  
+    plt.figure(figsize=(12, 6))
+
+    #plotting aoss
+    plt.subplot(1, 2, 1)
+    plt.plot(xc, train_loss, '-o', label='Training Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training vs Validation Loss')
+    plt.legend()
+
+    plt.tight_layout()
     plt.show()
