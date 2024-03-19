@@ -1,6 +1,5 @@
 #import libraries
-from helpers import xtrain_ytrain, visualizing, load_dataframe, clean_df, lstm_model
-import yfinance as yf
+from helpers import xtrain_ytrain, visualizing, load_dataframe, clean_df, lstm_model, model_data
 import pandas as pd
 
 #load data, clean data frame (closing stock prices)
@@ -20,3 +19,5 @@ model = lstm_model(xtrain=xtrain, ytrain=ytrain)
 
 #plot results
 visualizing(model=model, xtest=xtest, ytest=ytest, sc=scale)
+model_data(model=model)
+
